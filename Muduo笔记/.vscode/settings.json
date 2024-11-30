@@ -1,0 +1,24 @@
+{
+    "files.associations": {
+        "functional": "cpp",
+        "iostream": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp",
+        "string": "cpp"
+    },
+    "[markdown]": {
+        "editor.unicodeHighlight.ambiguousCharacters": false,
+        "editor.unicodeHighlight.invisibleCharacters": false,
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.wordWrap": "on",
+        //开启markdown补全
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "strings": "off",
+            "other": "on"
+        },
+        //设置只匹配本文件
+        "editor.wordBasedSuggestionsMode": "currentDocument",
+    },
+    "cmake.sourceDirectory": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo",
+}
