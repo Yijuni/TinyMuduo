@@ -1,7 +1,7 @@
 #include "Thread.h"
 #include "CurrentThread.h"
 #include <semaphore.h>
-int numCreated_ = 0;//静态变量需要在类外初始化
+std::atomic_int Thread::numCreated_(0);//静态变量需要在类外初始化
 Thread::Thread(ThreadFunc func, const std::string name):
     started_(false),joined_(false),func_(std::move(func)),
     name_(name),tid_(0)

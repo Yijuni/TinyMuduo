@@ -28,6 +28,6 @@ private:
     pid_t tid_;
     ThreadFunc func_;
     std::string name_; 
-    static int numCreated_;
+    static std::atomic_int numCreated_;
 
 };
