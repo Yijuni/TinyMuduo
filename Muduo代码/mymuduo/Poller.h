@@ -22,8 +22,8 @@ public:
 
     //给所有IO复用接口保留统一的接口,派生类必须实现
     virtual Timestamp poll(int timeOutMs,ChannelList* activeChannel) = 0;
-    virtual void updateChannel(Channel *channel) = 0;
-    virtual void removeChannel(Channel *channel) = 0;
+    virtual void updateChannel(Channel *channel) = 0;//更新channel在epoll_wait中的状态
+    virtual void removeChannel(Channel *channel) = 0;//从poller中的map中移除
     //判断channel是否在当前poller当中
     bool hasChannel(Channel *channel) const;
     //EventLoop可以通过该接口获取默认的IO复用具体实现
