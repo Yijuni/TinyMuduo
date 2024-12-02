@@ -1,7 +1,7 @@
 #include "EventLoopThread.h"
 #include "EventLoop.h"
-#include <memory>
-EventLoopThread::EventLoopThread(const ThreadInitCallback &cb,const std::string &name = std::string()):
+
+EventLoopThread::EventLoopThread(const ThreadInitCallback cb,const std::string name):
     loop_(nullptr),exiting_(false),
     thread_(std::bind(&EventLoopThread::threadFunc,this),name),
     initcallback_(cb)
@@ -50,5 +50,5 @@ void EventLoopThread::threadFunc()
     }
     loop.loop();
     std::unique_lock<std::mutex> lock(mutex_);
-    loop_ = nullptr; 
+    loop_ = nullptr;//保存了局部变量的地址，局部变量释放了需要把指针置空
 }
