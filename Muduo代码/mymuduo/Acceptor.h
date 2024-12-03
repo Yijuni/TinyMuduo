@@ -11,7 +11,7 @@ class InetAddress;
 class Acceptor:nocopyable{
 public:
     using NewConnectionCallback = std::function<void(int sockfd,const InetAddress&)>;
-    Acceptor(EventLoop* loop,const InetAddress& listenAddr,bool refuseport);
+    Acceptor(EventLoop* loop,const InetAddress& listenAddr,bool reuseport);
     ~Acceptor();
     void setNewConnctionCallback(const NewConnectionCallback &cb){newConnectionCallback_ = cb;}
     bool listenning(){return listenning_;}

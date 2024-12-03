@@ -54,13 +54,13 @@ void Socket::setTcpNoDelay(bool on)
     ::setsockopt(sockfd_,IPPROTO_TCP,TCP_NODELAY,&optval,sizeof optval);
 }
 
-void Socket::setRefuseAddr(bool on)
+void Socket::setReuseAddr(bool on)
 {
     int optval = on?1:0;
     ::setsockopt(sockfd_,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval);
 }
 
-void Socket::setRefusePort(bool on)
+void Socket::setReusePort(bool on)
 {
     int optval = on?1:0;
     ::setsockopt(sockfd_,SOL_SOCKET,SO_REUSEPORT,&optval,sizeof optval);

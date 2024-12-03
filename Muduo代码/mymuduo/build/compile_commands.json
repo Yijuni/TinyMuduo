@@ -6,6 +6,11 @@
 },
 {
   "directory": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/build",
+  "command": "/usr/bin/c++ -Dmymuduo_EXPORTS   -g -std=c++11 -fPIC -g -fPIC -o CMakeFiles/mymuduo.dir/Buffer.cc.o -c /home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/Buffer.cc",
+  "file": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/Buffer.cc"
+},
+{
+  "directory": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/build",
   "command": "/usr/bin/c++ -Dmymuduo_EXPORTS   -g -std=c++11 -fPIC -g -fPIC -o CMakeFiles/mymuduo.dir/Channel.cc.o -c /home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/Channel.cc",
   "file": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/Channel.cc"
 },
@@ -58,6 +63,11 @@
   "directory": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/build",
   "command": "/usr/bin/c++ -Dmymuduo_EXPORTS   -g -std=c++11 -fPIC -g -fPIC -o CMakeFiles/mymuduo.dir/Socket.cc.o -c /home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/Socket.cc",
   "file": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/Socket.cc"
+},
+{
+  "directory": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/build",
+  "command": "/usr/bin/c++ -Dmymuduo_EXPORTS   -g -std=c++11 -fPIC -g -fPIC -o CMakeFiles/mymuduo.dir/TcpConnection.cc.o -c /home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/TcpConnection.cc",
+  "file": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/TcpConnection.cc"
 },
 {
   "directory": "/home/moyoj/桌面/github/MuduoProject/Muduo代码/mymuduo/build",

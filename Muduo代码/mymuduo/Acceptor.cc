@@ -13,12 +13,12 @@ static int createNonblocking(){//创建一个监听连接的socket
     return sockfd;
 }
 
-Acceptor::Acceptor(EventLoop *loop, const InetAddress &listenAddr, bool refuseport):
+Acceptor::Acceptor(EventLoop *loop, const InetAddress &listenAddr, bool reuseport):
     loop_(loop),acceptSocket_(createNonblocking()),
     acceptChannel_(acceptSocket_.fd(),loop),listenning_(false)
 {
-    acceptSocket_.setRefusePort(true);
-    acceptSocket_.setRefusePort(true);
+    acceptSocket_.setReusePort(reuseport);
+    acceptSocket_.setReuseAddr(true);
 
     acceptSocket_.bindAddress(listenAddr);//bind
 
@@ -46,7 +46,7 @@ void Acceptor::listen()//listen
 void Acceptor::handleRead()//accept
 {
     InetAddress peerAddr;//对端IP+PORT
-    int confd = acceptSocket_.accept(&peerAddr);
+    int confd = acceptSocket_.accept(&peerAddr);//返回跟某个客户端通信的sockfd
     if(confd>=0){
         if(newConnectionCallback_){
             newConnectionCallback_(confd,peerAddr);//轮询找到subloop唤醒，分发当前的新客户端的channel

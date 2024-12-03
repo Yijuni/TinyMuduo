@@ -22,7 +22,7 @@ public:
         kReusePort,
     };
     
-    TcpServer(EventLoop*,const InetAddress& listenAddr,Option option = kNoReusePort);
+    TcpServer(EventLoop*,const InetAddress& listenAddr,const std::string& name,Option option = kNoReusePort);
     ~TcpServer();
     void setThreadNum(int numThread);//设置底层subloop的个数（线程数）
 
@@ -36,7 +36,7 @@ public:
 
 private:
 
-    void newConnection(int sockfd,const InetAddress &peerAddr);
+    void newConnection(int sockfd,const InetAddress &peerAddr);//给Acceptor的回调，也就是有新连接时的回调
     void removeConnection(const TcpConnectionPtr &conn);
     void removeConnectionInLoop(const TcpConnectionPtr &conn);
 
@@ -47,7 +47,7 @@ private:
     std::unique_ptr<Acceptor> acceptor_;//运行在mainloop，监听新连接事件
     std::unique_ptr<EventLoopThreadPool> threadPool_;//one loop peer thread
      
-    ConnectionCallback connectionCallback_;//有新连接时的回调
+    ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;//有读写消息时的回调
     WriteCompleteCallback writeCompleteCallback_;//消息发送完后的回调
 
