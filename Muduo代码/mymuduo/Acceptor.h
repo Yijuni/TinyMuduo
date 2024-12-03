@@ -21,7 +21,7 @@ private:
     EventLoop* loop_;
     Socket acceptSocket_;
     Channel acceptChannel_;
-    NewConnectionCallback newConnectionCallback_;//这个回调函数由TcpServer给出
+    NewConnectionCallback newConnectionCallback_;//这个回调函数由TcpServer给出,新用户连接进来需要执行什么任务
     bool listenning_;
 
 

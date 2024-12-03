@@ -4,7 +4,7 @@
 EventLoopThread::EventLoopThread(const ThreadInitCallback cb,const std::string name):
     loop_(nullptr),exiting_(false),
     thread_(std::bind(&EventLoopThread::threadFunc,this),name),
-    initcallback_(cb)
+    threadInitcallback_(cb)
 {
 
 }
@@ -39,9 +39,9 @@ void EventLoopThread::threadFunc()
 {
     //one loop per thread
     EventLoop loop;//在启动的线程中，创建一个EventLoop
-    if(initcallback_){//初始化函数如果存在就运行初始化函数
+    if(threadInitcallback_){//初始化函数如果存在就运行初始化函数
         // 新线程中设置或初始化EventLoop对象之前执行一些自定义的初始化代码。
-        initcallback_(&loop);
+        threadInitcallback_(&loop);
     }
     {
         std::unique_lock<std::mutex> lock(mutex_);

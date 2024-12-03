@@ -22,6 +22,6 @@ private:
     Thread thread_;
     std::mutex mutex_;
     std::condition_variable cond_;  
-    ThreadInitCallback initcallback_;
+    ThreadInitCallback threadInitcallback_;
 
 };
