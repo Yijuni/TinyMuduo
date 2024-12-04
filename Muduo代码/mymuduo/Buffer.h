@@ -9,20 +9,23 @@ public:
     static const std::size_t kInitialSize = 1024;
  
     explicit Buffer(std::size_t initialSize = kInitialSize);
+
+    std::string retrieveAllAsString();//Buffer->std::string
+    std::string retrieveAsString(size_t len);
+
+    void append(const char* data,size_t len);
+    ssize_t readFd(int fd,int *saveErrno);//从fd读取数据
+private: 
     std::size_t readableBytes() const;
     std::size_t writableBytes() const;
     std::size_t prependableBytes() const;//返回读指针位置
 
     const char* peek() const;//返回缓冲区中可读数据的起始地址
-
+    //更新readerindex_
     void retrieve(std::size_t len);
     void retrieveAll();
-    std::string retrieveAllAsString();
-    std::string retrieveAsString(size_t len);
-
     void ensureWriteableBytes(size_t len);//确保可写缓冲区够用
-    
-private: 
+    char* beginWrite();
     void makeSpace(size_t len);
     char* begin();
     const char* begin() const;
