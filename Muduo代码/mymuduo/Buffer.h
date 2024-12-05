@@ -14,11 +14,14 @@ public:
     std::string retrieveAsString(size_t len);
 
     void append(const char* data,size_t len);
-    ssize_t readFd(int fd,int *saveErrno);//从fd读取数据
-private: 
+    ssize_t readFd(int fd,int *saveErrno);//从fd读取对端发来的数据
+    ssize_t writeFd(int fd,int *saveErrno);//往fd写数据，发送数据给对端
+
     std::size_t readableBytes() const;
     std::size_t writableBytes() const;
     std::size_t prependableBytes() const;//返回读指针位置
+private: 
+
 
     const char* peek() const;//返回缓冲区中可读数据的起始地址
     //更新readerindex_

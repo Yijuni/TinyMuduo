@@ -40,6 +40,7 @@ public:
     void connectEstablished();//连接建立
     void connectDestroyed();//连接销毁
 
+    
 private:
     enum StateE {kDisconnected,kConnecting,kConnected,kDisconnecting};
 
@@ -51,6 +52,7 @@ private:
     void sendInLoop(const void* message,size_t len);
     void shutDownInLoop();
 
+    void setState(StateE state){state_ = state;}
     EventLoop* loop_;
     const std::string name_;
     std::atomic_int state_;

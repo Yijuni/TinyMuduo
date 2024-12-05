@@ -1,5 +1,6 @@
 #include "Buffer.h"
 #include <sys/uio.h>
+#include <unistd.h>
 Buffer::Buffer(std::size_t initialSize):buffer_(kCheapPrepend + initialSize),
     readerIndex_(kCheapPrepend),writerIndex_(kCheapPrepend)
 {
@@ -100,6 +101,16 @@ ssize_t Buffer::readFd(int fd, int *saveErrno)
     return n;
 }
 
+ssize_t Buffer::writeFd(int fd, int *saveErrno)
+{
+    ssize_t n = write(fd,peek(),readableBytes());//相当于把缓冲区数据读到fd里面去，所以需要读指针位置begin()+readerIndex_
+    if(n<0){
+        *saveErrno = errno;
+        return -1;
+    }
+    retrieve(n);//更新一下readerindex_
+    return n;
+}
 
 
 char* Buffer::beginWrite(){

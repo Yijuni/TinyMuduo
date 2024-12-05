@@ -4,6 +4,11 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include <functional>
+#include <error.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <strings.h>
+#include <netinet/tcp.h>
 static EventLoop* CheckLoopNotNull(EventLoop* loop){
     if(loop==nullptr){
         LOG_FATAL("%s:%s:%d TcpConnection Loop is null \n",__FILE__,__FUNCTION__,__LINE__);
@@ -50,18 +55,68 @@ void TcpConnection::connectDestroyed()
 
 void TcpConnection::handleRead(Timestamp receiveTime)
 {
+    int saveErrno = 0;
+    ssize_t n = inputBuffer_.readFd(channel_->fd(),&saveErrno);
+    if(n>0){
+        //收到已经建立连接的客户端的消息，调用用户传入的回调函数处理消息;
+        messageCallback_(shared_from_this(),&inputBuffer_,receiveTime);
+    }else if(n==0){
+        handleClose();
+    }else{
+        errno = saveErrno;
+        LOG_ERROR("TcpConnection::handRead error");
+        handleError();
+    }
 }
 
 void TcpConnection::handleWrite()
 {
+    int saveErrno = 0;
+    if(channel_->isWriting()){//是否注册了可写事件
+        ssize_t n = outputBuffer_.writeFd(channel_->fd(),&saveErrno);
+        if(n>0){
+            if(outputBuffer_.readableBytes()==0){
+                channel_->disableWriting();//数据已经写完了，就不能监测可写事件了   
+                if(writeCompleteCallback_){
+                    //调用handleWrite的时机是channel发生可写事件，loop检测到活跃的channel调用其handleEventWithGuard进而调用此函数
+                    //也就是loop所在线程调用的，所以queueInLoop不会因为!isInLoopThread()为true而唤醒loop结束poller执行回调
+                    loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+                }
+                //正在关闭，客户端主动关闭或者服务器想关闭连接
+                if(kDisconnecting == state_){
+                    shutDownInLoop();
+                }
+            }
+        }
+        else{
+            LOG_ERROR("TcpConnection::handleWrite error");
+        }
+    }else{
+        LOG_ERROR("TcpConnection channel_fd=%d is down,no more writing \n",channel_->fd());
+    } 
 }
 
 void TcpConnection::handleClose()
 {
+    LOG_INFO("TcpConnection::handleClose fd=%d state=%d \n",channel_->fd(),(int)state_);
+    setState(kDisconnected);
+    channel_->disableAll();
+    TcpConnectionPtr connPtr(shared_from_this());
+    connectionCallback_(connPtr);//执行连接关闭的回调
+    CloseCallback_(connPtr);//关闭连接的回调
 }
 
 void TcpConnection::handleError()
 {
+    int optval;
+    socklen_t optlen = sizeof optval;
+    int err =0;
+    if(getsockopt(channel_->fd(),SOL_SOCKET,SO_ERROR,&optval,&optlen)<0){//获取失败
+        err = errno;
+    }else{//获取成功
+        err = optval;
+    }
+    LOG_ERROR("TcpConnection::handleError name:%s-SO_ERROR:%d\n",name_.c_str(),err);
 }
 
 void TcpConnection::sendInLoop(const void *message, size_t len)
