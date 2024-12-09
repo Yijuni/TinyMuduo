@@ -82,7 +82,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
             readCallBack_(receiveTime);
         }
     }
-    //检查 revents_ 是否包含 EPOLLOUT 标志，表示可以写入数据。
+    //检查 revents_ 是否包含 EPOLLOUT 标志，缓冲区现在不满了。
     if(revents_&EPOLLOUT){
         if(writeCallBack_){
             writeCallBack_();

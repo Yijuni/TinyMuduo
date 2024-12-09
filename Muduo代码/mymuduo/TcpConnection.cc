@@ -41,9 +41,23 @@ void TcpConnection::send(const void *message, int len)
 
 }
 
-void TcpConnection::shutDown()
+void TcpConnection::send(const std::string &message)
+{
+    if(state_==kConnected)
+    {
+        if(loop_->isInLoopThread())
+        {
+            sendInLoop(message.c_str(),message.length());
+        }else{
+            loop_->runInLoop(std::bind(&TcpConnection::sendInLoop,this,message.c_str(),message.size()));
+        }
+    }
+}
+
+void TcpConnection::shutdown()
 {
 }
+
 
 void TcpConnection::connectEstablished()
 {
@@ -118,9 +132,48 @@ void TcpConnection::handleError()
     }
     LOG_ERROR("TcpConnection::handleError name:%s-SO_ERROR:%d\n",name_.c_str(),err);
 }
-
-void TcpConnection::sendInLoop(const void *message, size_t len)
+/**
+ * 发送数据,应用写得快，内核发送数据慢，需要把待发送数据写入缓冲区
+ */
+void TcpConnection::sendInLoop(const void *data, size_t len)
 {
+    ssize_t nwrite = 0;
+    size_t remaining = len;
+    bool faultError = false;
+    if(state_ == kDisconnected){//调用过该connection的shutdown就不能发送了
+        LOG_ERROR("disconnected,give up writing!\n");
+        return;
+    }
+    if(!channel_->isWriting() && outputBuffer_.readableBytes()==0){//channel第一次开始写数据，而且缓冲区没有待发送数据
+        nwrite = write(channel_->fd(),data,len);
+        if(nwrite>=0){
+            remaining = len-nwrite;
+            if(remaining==0 && writeCompleteCallback_){
+                //一次性写完了直接调用写完成回调,也不用给channel设置epoll_out事件了
+                loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+            }
+        }else{
+            nwrite = 0;
+            if(errno!=EWOULDBLOCK){
+                LOG_ERROR("TcpConnection::sendInLoop\n");
+                if(errno== EPIPE || errno==ECONNRESET){//SIGPIPE(本地端连接已关闭你还发送就会触发这个错误) RESET(连接被对方重置) 
+                    faultError = true;
+                }
+            }
+        }
+    }
+    //数据没有全部发送完，剩余数据需要保存到outPutBuffer_，并给channel注册EPOLL_OUT
+    //发送缓冲区从不可发送（没空间）=》可发送（有空间），会触发EPOLL_OUT信号，调用给channel注册的handleWrite回调继续发送数据
+    if(!faultError&&remaining>0){
+        size_t oleLen = outputBuffer_.readableBytes();//目前缓冲区剩余的待发送数据
+        if(oleLen+remaining>=highWaterMark_&&oleLen<highWaterMark_&&highWaterMarkCallback_){
+            loop_->queueInLoop(std::bind(highWaterMarkCallback_,shared_from_this(),oleLen+remaining));
+        }
+        outputBuffer_.append((char*)data+nwrite,remaining);
+        if(!channel_->isWriting()){
+            channel_->enableReading();//注册可写事件才能继续发送outputBuffer_缓冲区数据
+        }
+    } 
 }
 
 void TcpConnection::shutDownInLoop()

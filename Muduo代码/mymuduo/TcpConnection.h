@@ -29,7 +29,8 @@ public:
     bool connected() const{return state_ == kConnected;}//是否已连接
 
     void send(const void *message,int len);//发送数据
-    void shutDown();//关闭连接
+    void send(const std::string& message);
+    void shutdown();//关闭连接
     
     void setConnectionCallback(const ConnectionCallback& cb){connectionCallback_ = cb;}
     void setCloseCallback(const CloseCallback& cb){CloseCallback_ = cb;}
@@ -49,7 +50,7 @@ private:
     void handleClose();
     void handleError();
 
-    void sendInLoop(const void* message,size_t len);
+    void sendInLoop(const void* data,size_t len);
     void shutDownInLoop();
 
     void setState(StateE state){state_ = state;}
