@@ -40,11 +40,17 @@ public:
     void set_index(int idx){index_ = idx;}
 
     //通过channel设置事件的状态,也就是fd要关心的事件，需要poller提醒的事件
-    void enableReading(){events_ |= kReadEvent;update(); }//对fd读事件关注
-    void disableReading(){events_ &= ~kReadEvent;update(); }//对fd读事件不关注
-    void enableWriting(){events_ |= kWriteEvent;update(); }//对fd写事件关注
-    void disableWriting(){events_ &= ~kWriteEvent;update(); }//对fd写事件不关注
-    void disableAll(){events_ = kNoneEvent;update();}//无视所有fd事件
+    
+    //对fd读事件关注
+    void enableReading(){events_ |= kReadEvent;update(); }
+    //对fd读事件不关注
+    void disableReading(){events_ &= ~kReadEvent;update(); }
+    //对fd写事件关注
+    void enableWriting(){events_ |= kWriteEvent;update(); }
+    //对fd写事件不关注
+    void disableWriting(){events_ &= ~kWriteEvent;update(); }
+    //无视所有fd事件
+    void disableAll(){events_ = kNoneEvent;update();}
 
     //返回fd_的事件状态
     bool isNoneEvent()const{return events_==kNoneEvent;}//判断这个fd是否注册了事件

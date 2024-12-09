@@ -54,17 +54,25 @@ void TcpConnection::send(const std::string &message)
     }
 }
 
-void TcpConnection::shutdown()
-{
-}
-
-
 void TcpConnection::connectEstablished()
 {
+    setState(kConnected);
+    channel_->tie(shared_from_this());
+    channel_->enableReading();//注册EPOLL_IN事件
+
+    //新连接建立执行回调
+    connectionCallback_(shared_from_this());
+
 }
 
 void TcpConnection::connectDestroyed()
 {
+    if(state_==kConnected){
+        setState(kDisconnected);
+        channel_->disableAll();
+        connectionCallback_(shared_from_this());
+    }
+    channel_->remove();//从poller中删除
 }
 
 void TcpConnection::handleRead(Timestamp receiveTime)
@@ -176,6 +184,18 @@ void TcpConnection::sendInLoop(const void *data, size_t len)
     } 
 }
 
+void TcpConnection::shutdown()
+{
+    if(state_==kConnected){
+        setState(kDisconnecting);//正在关闭，还没关闭，数据发完才关闭
+        loop_->runInLoop(std::bind(&TcpConnection::shutDownInLoop,this));
+    }
+}
+
 void TcpConnection::shutDownInLoop()
 {
+    if(!channel_->isWriting()){//没有注册可写事件，说明缓冲区数据全部发送完成
+        //关闭写端，触发EPOLLHUP，channel调用closeCallback_也就是TcpConnection的handlClose方法，进而再调用该对象注册的CloseCallback_
+        socket_->shutdownWrite();
+    }
 }

@@ -24,7 +24,8 @@ Channel::~Channel()
 void Channel::handleEvent(Timestamp receiveTime)
 {
     if(tied_){
-        std::shared_ptr<void> guard = tie_.lock();
+        //提升成强智能指针，防止事件回调函数处理过程中，TcpConnection被移除，也就是回调完成前确保资源可用
+        std::shared_ptr<void> guard = tie_.lock(); 
         if(guard){
             handleEventWithGuard(receiveTime);
         }
@@ -32,7 +33,7 @@ void Channel::handleEvent(Timestamp receiveTime)
         handleEventWithGuard(receiveTime);
     }
 }
-
+//一个TcpConnection创立的时候会调用
 void Channel::tie(const std::shared_ptr<void> &obj )
 {
     tie_ = obj;
