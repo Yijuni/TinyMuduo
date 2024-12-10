@@ -108,6 +108,22 @@ enum EPOLL_EVENTS
     5. **非阻塞socket和EAGAIN错误配合使用**：在非阻塞socket的情况下，`EPOLLOUT` 事件与 `EAGAIN` 错误码配合使用。如果某次 `write` 操作写满了发送缓冲区，并返回 `EAGAIN` 错误码，或者对端读取了一些数据，使得缓冲区重新可写，此时会触发 `EPOLLOUT` 事件。
 
     总结来说，`EPOLLOUT` 事件通常在发送缓冲区状态发生变化时触发，特别是在边缘触发模式下，这种变化是从不可写状态到可写状态的转变。在水平触发模式下，只要缓冲区可写，`EPOLLOUT` 就会持续触发。理解这些触发条件对于有效地使用 `epoll` 进行事件驱动编程至关重要。
+2. **EPOLLHUP**
+
+    1. **本端描述符产生一个挂断事件**：当本地端（server端）的socket被挂断时，会触发 `EPOLLHUP` 事件。这通常意味着本端的socket连接已经无法进行读写操作。
+
+    2. **本端socket关闭或关闭读端**：`EPOLLHUP` 也可以在本端socket关闭或者关闭读端时被触发。
+
+    3. **与 `shutdown` 函数调用相关**：如果本端调用了 `shutdown(SHUT_RDWR)`，这会导致 `EPOLLHUP` 事件被触发。需要注意的是，不能在调用 `close` 之后触发 `EPOLLHUP`，因为 `close` 之后文件描述符已经失效。
+
+    4. **默认注册的事件**：`EPOLLHUP` 是默认注册的事件之一，因此在注册epoll事件时不需要特别注册它。
+
+    5. **与 `EPOLLERR` 事件一起触发**：在某些情况下，本端socket出现问题时，`EPOLLHUP` 和 `EPOLLERR` 事件可能会同时触发。
+
+    6. **对端正常关闭不触发**：对端正常关闭连接（如程序里调用 `close()`，或在shell下使用 `kill` 或 `Ctrl+C`）会触发 `EPOLLIN` 和 `EPOLLRDHUP`，但不会触发 `EPOLLERR` 和 `EPOLLHUP`。
+
+    `EPOLLHUP` 事件是epoll机制中用于处理连接挂起情况的重要事件，正确处理该事件对于维护稳定的网络连接非常关键。
+
 
 ### 常见错误码
 1. **EPIPE**
