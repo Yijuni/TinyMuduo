@@ -55,6 +55,6 @@ private:
 
     std::atomic_int started_;
 
-    int nextConnId_;
+    int nextConnId_;//连接id
     ConnectionMap connections_;//保存所有连接
 }; 

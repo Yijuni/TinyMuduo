@@ -36,33 +36,14 @@ TcpConnection::~TcpConnection()
     LOG_INFO("TcpConnection::dtor[%s] at fd=%d state=%d \n",name_.c_str(),socket_->fd(),(int)state_);
 }
 
-void TcpConnection::send(const void *message, int len)
-{
-
-}
-
-void TcpConnection::send(const std::string &message)
-{
-    if(state_==kConnected)
-    {
-        if(loop_->isInLoopThread())
-        {
-            sendInLoop(message.c_str(),message.length());
-        }else{
-            loop_->runInLoop(std::bind(&TcpConnection::sendInLoop,this,message.c_str(),message.size()));
-        }
-    }
-}
-
 void TcpConnection::connectEstablished()
 {
     setState(kConnected);
-    channel_->tie(shared_from_this());
+    channel_->tie(shared_from_this());//绑定TcpConnection，防止该对象被释放
     channel_->enableReading();//注册EPOLL_IN事件
 
     //新连接建立执行回调
     connectionCallback_(shared_from_this());
-
 }
 
 void TcpConnection::connectDestroyed()
@@ -102,16 +83,17 @@ void TcpConnection::handleWrite()
                 if(writeCompleteCallback_){
                     //调用handleWrite的时机是channel发生可写事件，loop检测到活跃的channel调用其handleEventWithGuard进而调用此函数
                     //也就是loop所在线程调用的，所以queueInLoop不会因为!isInLoopThread()为true而唤醒loop结束poller执行回调
-                    loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+                    // loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+                    loop_->runInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
                 }
-                //正在关闭，客户端主动关闭或者服务器想关闭连接
+                //状态设置过正在关闭，缓冲区数据发送完之后会再次执行shutDownInLoop
                 if(kDisconnecting == state_){
                     shutDownInLoop();
                 }
             }
         }
         else{
-            LOG_ERROR("TcpConnection::handleWrite error");
+            LOG_ERROR("TcpConnection::handleWrite error code：%d",saveErrno);
         }
     }else{
         LOG_ERROR("TcpConnection channel_fd=%d is down,no more writing \n",channel_->fd());
@@ -125,7 +107,7 @@ void TcpConnection::handleClose()
     channel_->disableAll();
     TcpConnectionPtr connPtr(shared_from_this());
     connectionCallback_(connPtr);//执行连接关闭的回调
-    CloseCallback_(connPtr);//关闭连接的回调
+    closeCallback_(connPtr);//关闭连接的回调,调用的是TcpServer的removeConnection
 }
 
 void TcpConnection::handleError()
@@ -140,6 +122,25 @@ void TcpConnection::handleError()
     }
     LOG_ERROR("TcpConnection::handleError name:%s-SO_ERROR:%d\n",name_.c_str(),err);
 }
+
+// void TcpConnection::send(const void *message, int len)
+// {
+
+// }
+
+void TcpConnection::send(const std::string &message)
+{
+    if(state_==kConnected)
+    {
+        if(loop_->isInLoopThread())
+        {
+            sendInLoop(message.c_str(),message.length());
+        }else{
+            loop_->runInLoop(std::bind(&TcpConnection::sendInLoop,this,message.c_str(),message.size()));
+        }
+    }
+}
+
 /**
  * 发送数据,应用写得快，内核发送数据慢，需要把待发送数据写入缓冲区
  */
@@ -158,7 +159,8 @@ void TcpConnection::sendInLoop(const void *data, size_t len)
             remaining = len-nwrite;
             if(remaining==0 && writeCompleteCallback_){
                 //一次性写完了直接调用写完成回调,也不用给channel设置epoll_out事件了
-                loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+                // loop_->queueInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
+                loop_->runInLoop(std::bind(writeCompleteCallback_,shared_from_this()));
             }
         }else{
             nwrite = 0;
@@ -175,11 +177,11 @@ void TcpConnection::sendInLoop(const void *data, size_t len)
     if(!faultError&&remaining>0){
         size_t oleLen = outputBuffer_.readableBytes();//目前缓冲区剩余的待发送数据
         if(oleLen+remaining>=highWaterMark_&&oleLen<highWaterMark_&&highWaterMarkCallback_){
-            loop_->queueInLoop(std::bind(highWaterMarkCallback_,shared_from_this(),oleLen+remaining));
+            loop_->runInLoop(std::bind(highWaterMarkCallback_,shared_from_this(),oleLen+remaining));
         }
         outputBuffer_.append((char*)data+nwrite,remaining);
         if(!channel_->isWriting()){
-            channel_->enableReading();//注册可写事件才能继续发送outputBuffer_缓冲区数据
+            channel_->enableWriting();//注册可写事件才能继续发送outputBuffer_缓冲区数据
         }
     } 
 }
@@ -187,7 +189,7 @@ void TcpConnection::sendInLoop(const void *data, size_t len)
 void TcpConnection::shutdown()
 {
     if(state_==kConnected){
-        setState(kDisconnecting);//正在关闭，还没关闭，数据发完才关闭
+        setState(kDisconnecting);//设置状态正在关闭，还没关闭，数据发完才关闭
         loop_->runInLoop(std::bind(&TcpConnection::shutDownInLoop,this));
     }
 }

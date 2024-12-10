@@ -90,7 +90,7 @@ void EventLoop::runInLoop(Functor cb)
     if(isInLoopThread()){//就在当前线程执行
         cb();
     }else{//不在当前线程执行，那就先需要唤醒loop所在线程执行cb
-        queueInLoop(cb);
+        queueInLoop(cb);//确保有序执行
     }
 }
 //不在当前线程执行的，把cb放入队列中，唤醒loop所在的线程执行cb

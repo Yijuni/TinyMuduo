@@ -28,20 +28,21 @@ public:
 
     bool connected() const{return state_ == kConnected;}//是否已连接
 
-    void send(const void *message,int len);//发送数据
+    // void send(const void *message,int len);//发送数据
     void send(const std::string& message);
     void shutdown();//关闭连接
     
+    //库使用者给的回调
     void setConnectionCallback(const ConnectionCallback& cb){connectionCallback_ = cb;}
-    void setCloseCallback(const CloseCallback& cb){CloseCallback_ = cb;}
-    void setWriteCallback(const WriteCompleteCallback& cb){writeCompleteCallback_ = cb;}
-    void setHighWaterCallback(const HighWaterMarkCallback&cb,size_t highWaterMark){highWaterMarkCallback_ = cb;highWaterMark_=highWaterMark;}
     void setMessageCallback(const MessageCallback& cb){messageCallback_ = cb;}
-
+    void setWriteCompleteCallback(const WriteCompleteCallback& cb){writeCompleteCallback_ = cb;}
+    //TcpServer给的回调
+    void setCloseCallback(const CloseCallback& cb){closeCallback_ = cb;}
+    void setHighWaterCallback(const HighWaterMarkCallback&cb,size_t highWaterMark){highWaterMarkCallback_ = cb;highWaterMark_=highWaterMark;}
+    
     void connectEstablished();//连接建立
     void connectDestroyed();//连接销毁
 
-    
 private:
     enum StateE {kDisconnected,kConnecting,kConnected,kDisconnecting};
 
@@ -69,7 +70,7 @@ private:
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;//有读写消息时的回调
     WriteCompleteCallback writeCompleteCallback_;//消息发送完后的回调
-    CloseCallback CloseCallback_;
+    CloseCallback closeCallback_;
     HighWaterMarkCallback highWaterMarkCallback_;
 
     size_t highWaterMark_;//水位线
