@@ -15,7 +15,7 @@ TcpServer::TcpServer(EventLoop *loop, const InetAddress &listenAddr,const std::s
     loop_(CheckLoopNotNull(loop)),name_(name),ipPort_(listenAddr.toIpPort()),
     acceptor_(new Acceptor(loop,listenAddr,option==kReusePort)),
     threadPool_(new EventLoopThreadPool(loop,name)),
-    connectionCallback_(),messageCallback_(),nextConnId_(1)
+    connectionCallback_(),messageCallback_(),nextConnId_(1),started_(0)
 {
     //acceptor->acceptor返回confd,然后调用以下函数
     acceptor_->setNewConnctionCallback(std::bind(&TcpServer::newConnection,this,

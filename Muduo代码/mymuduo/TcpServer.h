@@ -7,6 +7,8 @@
 #include "EventLoop.h"
 #include "InetAddress.h"
 #include "EventLoopThreadPool.h"
+#include "TcpConnection.h"
+#include "Buffer.h"
 #include "Callbacks.h"
 #include <unordered_map>
 #include <atomic>
