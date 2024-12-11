@@ -34,7 +34,7 @@ int Socket::accept(InetAddress *peeraddr){
     sockaddr_in addr;
     socklen_t len = sizeof addr;
     bzero(&addr,len);
-    int confd = ::accept(sockfd_,(sockaddr*)&addr,&len);
+    int confd = ::accept4(sockfd_,(sockaddr*)&addr,&len,SOCK_CLOEXEC | SOCK_NONBLOCK);//accept4多了一个参数
     if(confd>=0){
         peeraddr->setSockAddr(addr);//设置网络地址的sockaddr_in
     }
