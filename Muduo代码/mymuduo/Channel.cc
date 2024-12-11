@@ -24,9 +24,9 @@ Channel::~Channel()
 void Channel::handleEvent(Timestamp receiveTime)
 {
     if(tied_){
-        //提升成强智能指针，防止事件回调函数处理过程中，TcpConnection被移除，也就是回调完成前确保资源可用
+        //提升成强智能指针，防止事件回调函数处理过程中TcpConnection被移除，也就是回调完成前确保资源可用
         std::shared_ptr<void> guard = tie_.lock(); 
-        if(guard){
+        if(guard){//如果提升失败说明TcpConnection没有存活那就不执行
             handleEventWithGuard(receiveTime);
         }
     }else{
