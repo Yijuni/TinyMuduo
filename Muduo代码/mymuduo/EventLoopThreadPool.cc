@@ -32,8 +32,7 @@ EventLoop *EventLoopThreadPool::getNextLoop()
     EventLoop *loop = baseloop_;
     if(!loops_.empty()){//轮询获取下一个工作线程
         loop = loops_[next_];
-        next_ = (++next_)%loops_.size();   
-           
+        next_ = (++next_)%loops_.size();
     }
     return loop;
 }
